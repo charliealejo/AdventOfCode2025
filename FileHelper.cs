@@ -29,12 +29,12 @@
 
         public static int[][] ReadLinesAsIntMap(string filename)
         {
-            return ReadLines(filename).Select(l => l.ToCharArray().Select(c => int.Parse("" + c)).ToArray()).ToArray();
+            return [.. ReadLines(filename).Select(l => l.ToCharArray().Select(c => int.Parse("" + c)).ToArray())];
         }
 
         public static char[][] ReadLinesAsCharMap(string filename)
         {
-            return ReadLines(filename).Select(l => l.ToCharArray().ToArray()).ToArray();
+            return [.. ReadLines(filename).Select(l => l.ToCharArray().ToArray())];
         }
 
         public static IEnumerable<Tuple<Types>> ReadLinesAsTuple<Types>(string filename)
