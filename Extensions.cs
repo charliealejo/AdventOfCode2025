@@ -28,5 +28,24 @@
         internal static long LCM(long a, long b) => a * b / GCD(a, b);
 
         internal static long GCD(long a, long b) => (b == 0) ? a : GCD(b, a % b);
+
+        internal static IEnumerable<List<T>> ChunkBy<T>(this IEnumerable<T> source, Func<T, bool> predicate)
+        {
+            var chunk = new List<T>();
+            foreach (var item in source)
+            {
+                if (predicate(item))
+                {
+                    chunk.Add(item);
+                }
+                else if (chunk.Count > 0)
+                {
+                    yield return chunk;
+                    chunk = [];
+                }
+            }
+            if (chunk.Count > 0)
+                yield return chunk;
+        }
     }
 }
