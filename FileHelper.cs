@@ -27,6 +27,18 @@
             return ReadLines(filename).Select(l => l.Split(separator).Select(long.Parse));
         }
 
+        public static Position3D[] ReadLinesAs3DPoints(string filename, string separator)
+        {
+            return [.. ReadLines(filename).Select(l =>
+            {
+                var parts = l.Split(separator);
+                return new Position3D(
+                    int.Parse(parts[0]),
+                    int.Parse(parts[1]),
+                    int.Parse(parts[2]));
+            })];
+        }
+
         public static int[][] ReadLinesAsIntMap(string filename)
         {
             return [.. ReadLines(filename).Select(l => l.ToCharArray().Select(c => int.Parse("" + c)).ToArray())];
