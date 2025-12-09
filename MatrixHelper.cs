@@ -44,7 +44,41 @@ namespace AdventOfCode2025
                         Math.Pow(p1.Z - p2.Z, 2)
                     );
                     distances[(p1, p2)] = distance;
-                    //distances[(p2, p1)] = distance; // Symmetric
+                }
+            }
+            return distances;
+        }
+
+        internal static Dictionary<(Position, Position), double> GetAllAreas(Position[] pointList)
+        {
+            var areas = new Dictionary<(Position, Position), double>();
+            for (int i = 0; i < pointList.Length; i++)
+            {
+                for (int j = i + 1; j < pointList.Length; j++)
+                {
+                    var p1 = pointList[i];
+                    var p2 = pointList[j];
+                    double area = (long)(Math.Abs(p1.X - p2.X) + 1) * (Math.Abs(p1.Y - p2.Y) + 1);
+                    areas[(p1, p2)] = area;
+                }
+            }
+            return areas;
+        }
+
+        internal static Dictionary<(Position, Position), double> GetAllDistances(Position[] pointList)
+        {
+            var distances = new Dictionary<(Position, Position), double>();
+            for (int i = 0; i < pointList.Length; i++)
+            {
+                for (int j = i + 1; j < pointList.Length; j++)
+                {
+                    var p1 = pointList[i];
+                    var p2 = pointList[j];
+                    double distance = Math.Sqrt(
+                        Math.Pow(p1.X - p2.X, 2) +
+                        Math.Pow(p1.Y - p2.Y, 2)
+                    );
+                    distances[(p1, p2)] = distance;
                 }
             }
             return distances;
@@ -55,6 +89,7 @@ namespace AdventOfCode2025
     {
         public int X { get; set; } = x;
         public int Y { get; set; } = y;
+        public override string ToString() => $"({X}, {Y})";
     }
 
     internal class Position3D(int x, int y, int z)
