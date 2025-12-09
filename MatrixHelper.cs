@@ -85,18 +85,44 @@ namespace AdventOfCode2025
         }
     }
 
-    internal class Position(int x, int y)
+    internal class Position(int x, int y) : IEquatable<Position>
     {
         public int X { get; set; } = x;
         public int Y { get; set; } = y;
         public override string ToString() => $"({X}, {Y})";
+
+        public bool Equals(Position other)
+        {
+            if (other is null) return false;
+            return X == other.X && Y == other.Y;
+        }
+
+        public override int GetHashCode() => HashCode.Combine(X, Y);
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Position);
+        }
     }
 
-    internal class Position3D(int x, int y, int z)
+    internal class Position3D(int x, int y, int z) : IEquatable<Position3D>
     {
         public int X { get; set; } = x;
         public int Y { get; set; } = y;
         public int Z { get; set; } = z;
         public override string ToString() => $"({X}, {Y}, {Z})";
+
+        public bool Equals(Position3D other)
+        {
+            if (other is null) return false;
+            return X == other.X && Y == other.Y && Z == other.Z;
+        }
+
+        public override int GetHashCode() => HashCode.Combine(X, Y, Z);
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Position3D);
+        }
     }
 }
