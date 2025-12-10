@@ -1,4 +1,7 @@
-﻿namespace AdventOfCode2025
+﻿using Google.OrTools.LinearSolver;
+using System.Data;
+
+namespace AdventOfCode2025
 {
     internal class D10 : Day
     {
@@ -11,7 +14,7 @@
             {
                 var parts = machine.Split(' ');
                 var goal = parts[0][1..^1].Select(c => c == '#').ToArray();
-                var buttons = parts[1..^1].Select(p => p[1..^1].Split(',').Select(long.Parse).ToArray()).ToArray();
+                var buttons = parts[1..^1].Select(p => p[1..^1].Split(',').Select(int.Parse).ToArray()).ToArray();
 
                 bool found = false;
 
@@ -49,145 +52,65 @@
             foreach (var machine in machines)
             {
                 var parts = machine.Split(' ');
-                var goal = parts[^1][1..^1].Split(',').Select(long.Parse).ToArray();
-                var buttons = parts[1..^1].Select(p => p[1..^1].Split(',').Select(long.Parse).ToArray()).ToArray();
+                var goal = parts[^1][1..^1].Split(',').Select(int.Parse).ToArray();
+                var buttons = parts[1..^1].Select(p => p[1..^1].Split(',').Select(int.Parse).ToArray()).ToArray();
 
-                var result = FindShortestPath(buttons, goal);
-                answer += result;
+                var result = Solve(buttons, goal);
+                answer += result.Sum();
             }
 
             Console.WriteLine(answer);
         }
 
-        private static long FindShortestPath(long[][] buttons, long[] goal)
+        public static int[] Solve(int[][] buttons, int[] target)
         {
-            int numPositions = goal.Length;
+            Solver solver = Solver.CreateSolver("SCIP");
+            if (solver == null) return null;
+
             int numButtons = buttons.Length;
-            
-            // Build coefficient array: coeffs[button][position] = how much button adds to position
-            var coeffs = new int[numButtons][];
-            for (int b = 0; b < numButtons; b++)
+            int numPositions = target.Length;
+
+            // Variables: how many times we press each button
+            Variable[] presses = new Variable[numButtons];
+            for (int i = 0; i < numButtons; i++)
             {
-                coeffs[b] = new int[numPositions];
-                foreach (var pos in buttons[b])
+                presses[i] = solver.MakeIntVar(0, target.Max() * 2, $"button_{i}");
+            }
+
+            // Constraints: each position must reach its target
+            for (int pos = 0; pos < numPositions; pos++)
+            {
+                Google.OrTools.LinearSolver.Constraint constraint = solver.MakeConstraint(target[pos], target[pos]);
+                for (int btn = 0; btn < numButtons; btn++)
                 {
-                    if (pos < numPositions)
-                        coeffs[b][pos]++;
+                    if (buttons[btn].Contains(pos))
+                    {
+                        constraint.SetCoefficient(presses[btn], 1);
+                    }
                 }
             }
 
-            // Use recursive backtracking with greedy selection
-            var bestResult = long.MaxValue;
-            var currentPresses = new int[numButtons];
-            var currentState = new long[numPositions];
-            
-            Solve(0);
-            
-            return bestResult == long.MaxValue ? -1 : bestResult;
-
-            void Solve(int totalPresses)
+            // Objective: minimize total button presses
+            Objective objective = solver.Objective();
+            for (int i = 0; i < numButtons; i++)
             {
-                // Pruning: if we already exceed best, stop
-                if (totalPresses >= bestResult)
-                    return;
-
-                // Check if we reached the goal
-                bool isGoal = true;
-                for (int p = 0; p < numPositions; p++)
-                {
-                    if (currentState[p] != goal[p])
-                    {
-                        isGoal = false;
-                        break;
-                    }
-                }
-                
-                if (isGoal)
-                {
-                    bestResult = totalPresses;
-                    return;
-                }
-
-                // Find the first position that needs more presses
-                int targetPos = -1;
-                long maxDeficit = 0;
-                for (int p = 0; p < numPositions; p++)
-                {
-                    var deficit = goal[p] - currentState[p];
-                    if (deficit > maxDeficit)
-                    {
-                        maxDeficit = deficit;
-                        targetPos = p;
-                    }
-                }
-
-                if (targetPos == -1) return;
-
-                // Find buttons that can help this position, sorted by efficiency
-                var candidates = new List<(int button, int contribution, int maxPresses)>();
-                for (int b = 0; b < numButtons; b++)
-                {
-                    if (coeffs[b][targetPos] > 0)
-                    {
-                        // Calculate max times we can press this button without exceeding any goal
-                        int maxPresses = int.MaxValue;
-                        for (int p = 0; p < numPositions; p++)
-                        {
-                            if (coeffs[b][p] > 0)
-                            {
-                                int remaining = (int)(goal[p] - currentState[p]);
-                                maxPresses = Math.Min(maxPresses, remaining / coeffs[b][p]);
-                            }
-                        }
-                        
-                        if (maxPresses > 0)
-                        {
-                            candidates.Add((b, coeffs[b][targetPos], maxPresses));
-                        }
-                    }
-                }
-
-                // Sort by contribution descending (greedy: use most impactful button first)
-                candidates.Sort((a, b) => b.contribution.CompareTo(a.contribution));
-
-                // Try each candidate button
-                foreach (var (button, contribution, maxPresses) in candidates)
-                {
-                    // Greedy: try pressing as many times as possible first, then fewer
-                    for (int presses = maxPresses; presses >= 1; presses--)
-                    {
-                        // Apply presses
-                        for (int p = 0; p < numPositions; p++)
-                            currentState[p] += coeffs[button][p] * presses;
-                        currentPresses[button] += presses;
-
-                        // Check validity (no position exceeds goal)
-                        bool valid = true;
-                        for (int p = 0; p < numPositions; p++)
-                        {
-                            if (currentState[p] > goal[p])
-                            {
-                                valid = false;
-                                break;
-                            }
-                        }
-
-                        if (valid)
-                        {
-                            Solve(totalPresses + presses);
-                        }
-
-                        // Undo presses
-                        for (int p = 0; p < numPositions; p++)
-                            currentState[p] -= coeffs[button][p] * presses;
-                        currentPresses[button] -= presses;
-
-                        // Early exit if we found an optimal solution
-                        if (bestResult <= totalPresses + 1)
-                            return;
-                    }
-                }
+                objective.SetCoefficient(presses[i], 1);
             }
+            objective.SetMinimization();
+
+            Solver.ResultStatus resultStatus = solver.Solve();
+
+            if (resultStatus == Solver.ResultStatus.OPTIMAL)
+            {
+                int[] result = new int[numButtons];
+                for (int i = 0; i < numButtons; i++)
+                {
+                    result[i] = (int)presses[i].SolutionValue();
+                }
+                return result;
+            }
+
+            return null;
         }
     }
 }

@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Google.OrTools" Version="9.14.6206" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="D10.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
