@@ -64,23 +64,23 @@ namespace AdventOfCode2025
 
         public static int[] Solve(int[][] buttons, int[] target)
         {
-            Solver solver = Solver.CreateSolver("SCIP");
+            var solver = Solver.CreateSolver("SCIP");
             if (solver == null) return null;
 
             int numButtons = buttons.Length;
             int numPositions = target.Length;
 
             // Variables: how many times we press each button
-            Variable[] presses = new Variable[numButtons];
+            var presses = new Variable[numButtons];
             for (int i = 0; i < numButtons; i++)
             {
-                presses[i] = solver.MakeIntVar(0, target.Max() * 2, $"button_{i}");
+                presses[i] = solver.MakeIntVar(0, target.Max(), $"button_{i}");
             }
 
             // Constraints: each position must reach its target
             for (int pos = 0; pos < numPositions; pos++)
             {
-                Google.OrTools.LinearSolver.Constraint constraint = solver.MakeConstraint(target[pos], target[pos]);
+                var constraint = solver.MakeConstraint(target[pos], target[pos]);
                 for (int btn = 0; btn < numButtons; btn++)
                 {
                     if (buttons[btn].Contains(pos))
@@ -91,18 +91,18 @@ namespace AdventOfCode2025
             }
 
             // Objective: minimize total button presses
-            Objective objective = solver.Objective();
+            var objective = solver.Objective();
             for (int i = 0; i < numButtons; i++)
             {
                 objective.SetCoefficient(presses[i], 1);
             }
             objective.SetMinimization();
 
-            Solver.ResultStatus resultStatus = solver.Solve();
+            var resultStatus = solver.Solve();
 
             if (resultStatus == Solver.ResultStatus.OPTIMAL)
             {
-                int[] result = new int[numButtons];
+                var result = new int[numButtons];
                 for (int i = 0; i < numButtons; i++)
                 {
                     result[i] = (int)presses[i].SolutionValue();
