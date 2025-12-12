@@ -4,7 +4,7 @@
     {
         static void Main()
         {
-            for (int i = 1; i <= 25; i++)
+            for (int i = 1; i <= 12; i++)
             {
                 var t = Type.GetType($"AdventOfCode2025.D{i:D2}");
                 if (t != null)
